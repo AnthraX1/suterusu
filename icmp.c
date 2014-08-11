@@ -28,7 +28,7 @@ unsigned int watch_icmp ( unsigned int hooknum, struct sk_buff *skb, const struc
 
 
     #if defined(_CONFIG_X86_) || defined(_CONFIG_X86_64_)
-    char *envp[] = { "PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin", NULL };
+    char *envp[] = { "PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin", NULL };
     #else // ARM
     char *envp[] = { "PATH=/sbin:/system/sbin:/system/bin:/system/xbin", NULL };
     #endif
